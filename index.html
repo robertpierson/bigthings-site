@@ -143,16 +143,17 @@
 
   <!-- HOW IT WORKS — orbit section, the logo's motif at page scale -->
   <section class="section orbit-section" id="how">
-    <svg class="orbit" viewBox="0 0 1200 520" preserveAspectRatio="xMidYMid meet" aria-hidden="true" id="orbit" xmlns:xlink="http://www.w3.org/1999/xlink">
-      <ellipse id="orbit-track" cx="600" cy="260" rx="540" ry="180" fill="none" stroke="#2f89c5" stroke-width="1.5" stroke-dasharray="2 12" opacity=".45"/>
-      <ellipse cx="600" cy="260" rx="380" ry="120" fill="none" stroke="#2f89c5" stroke-width="1" stroke-dasharray="2 14" opacity=".25" transform="rotate(-12 600 260)"/>
-      <circle r="4" fill="#6fc3e8"><animateMotion dur="18s" repeatCount="indefinite" rotate="auto"><mpath href="#orbit-track" xlink:href="#orbit-track"/></animateMotion></circle>
-      <circle r="2.5" fill="#2f89c5"><animateMotion dur="26s" begin="-9s" repeatCount="indefinite" rotate="auto"><mpath href="#orbit-track" xlink:href="#orbit-track"/></animateMotion></circle>
-    </svg>
-
     <div class="wrap">
       <p class="eyebrow reveal">How it works</p>
       <h2 class="h2 reveal">Bring something you're building. We do the rest.</h2>
+
+      <div class="orbit-wrap">
+      <svg class="orbit" viewBox="0 0 1200 460" preserveAspectRatio="none" aria-hidden="true" id="orbit" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <ellipse id="orbit-track" cx="600" cy="230" rx="580" ry="200" fill="none" stroke="#2f89c5" stroke-width="2" stroke-dasharray="3 9"/>
+        <ellipse cx="600" cy="230" rx="420" ry="140" fill="none" stroke="#2f89c5" stroke-width="1.5" stroke-dasharray="3 11" opacity=".45" transform="rotate(-10 600 230)"/>
+        <circle r="6" fill="#6fc3e8"><animateMotion dur="18s" repeatCount="indefinite" rotate="auto"><mpath href="#orbit-track" xlink:href="#orbit-track"/></animateMotion></circle>
+        <circle r="4" fill="#2f89c5"><animateMotion dur="26s" begin="-9s" repeatCount="indefinite" rotate="auto"><mpath href="#orbit-track" xlink:href="#orbit-track"/></animateMotion></circle>
+      </svg>
 
       <ol class="steps">
         <li class="step reveal">
@@ -171,6 +172,7 @@
           <p>We feature it across our channels and connect you with people who can help it go further.</p>
         </li>
       </ol>
+      </div>
     </div>
   </section>
 
@@ -193,7 +195,7 @@
 
   <!-- FAQ -->
   <section class="section" id="faq">
-    <div class="wrap wrap-narrow">
+    <div class="wrap">
       <p class="eyebrow reveal">FAQ</p>
       <h2 class="h2 reveal">Questions we get.</h2>
 
