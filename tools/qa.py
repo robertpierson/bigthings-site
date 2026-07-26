@@ -1,7 +1,6 @@
-"""QA sweep for bigthings-site against the running server on :8010.
-Writes only tools/shots/*.png. Run: python tools/qa.py"""
-import re
-import sys
+"""QA sweep for bigthings-site against the server already running on :8010.
+Writes only tools/shots/*.png.  Run: python tools/qa.py"""
+import re, sys
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
@@ -24,20 +23,11 @@ def lum(c):
     return 0.2126 * f(c[0] / 255) + 0.7152 * f(c[1] / 255) + 0.0722 * f(c[2] / 255)
 
 
-def contrast(fg):
-    hi, lo = sorted((lum(fg), lum(BG)), reverse=True)
-    return (hi + 0.05) / (lo + 0.05)
-
-
-def over_bg(css):  # rgb()/rgba() string -> tuple composited onto BG
+def contrast(css):  # "rgb()/rgba()" string -> WCAG ratio against BG (alpha composited onto BG)
     n = [float(x) for x in re.findall(r"[\d.]+", css)]
     a = n[3] if len(n) > 3 else 1.0
-    return tuple(round(v * a + b * (1 - a)) for v, b in zip(n[:3], BG))
-
-
-def watch(page, errs):
-    page.on("console", lambda m: errs.append(f"console.error: {m.text}") if m.type == "error" else None)
-    page.on("pageerror", lambda e: errs.append(f"pageerror: {e}"))
+    hi, lo = sorted((lum([v * a + b * (1 - a) for v, b in zip(n[:3], BG)]), lum(BG)), reverse=True)
+    return (hi + 0.05) / (lo + 0.05)
 
 
 def check_errs(errs, label):
@@ -49,13 +39,19 @@ def check_overflow(page, label):
     check(sw <= iw + 1, f"{label}: no horizontal overflow (scrollWidth={sw}, innerWidth={iw})")
 
 
-def settle(page, vh, scroll=True):
+def load(browser, w, h, url, **kw):
+    page = browser.new_context(viewport={"width": w, "height": h}, **kw).new_page()
+    errs = []
+    page.on("console", lambda m: errs.append(f"console.error: {m.text}") if m.type == "error" else None)
+    page.on("pageerror", lambda e: errs.append(f"pageerror: {e}"))
+    page.goto(url, wait_until="load")
     page.evaluate("document.fonts.ready.then(() => true)")
     page.wait_for_timeout(700)
-    if not scroll:
-        return
-    total = page.evaluate("document.documentElement.scrollHeight")
-    for y in range(0, total, max(200, vh // 2)):
+    return page, errs
+
+
+def scroll_pass(page, vh):  # step down the page to trip the IntersectionObserver, then back to top
+    for y in range(0, page.evaluate("document.documentElement.scrollHeight"), max(200, vh // 2)):
         page.evaluate(f"scrollTo({{top: {y}, behavior: 'instant'}})")
         page.wait_for_timeout(120)
     page.evaluate("scrollTo({top: document.body.scrollHeight, behavior: 'instant'})")
@@ -64,19 +60,10 @@ def settle(page, vh, scroll=True):
     page.wait_for_timeout(800)
 
 
-def open_page(browser, w, h, url, **kw):
-    ctx = browser.new_context(viewport={"width": w, "height": h}, **kw)
-    page = ctx.new_page()
-    errs = []
-    watch(page, errs)
-    page.goto(url, wait_until="load")
-    return ctx, page, errs
-
-
 def run(b):
     for w, h in VIEWPORTS:
-        ctx, page, errs = open_page(b, w, h, BASE)
-        settle(page, h)
+        page, errs = load(b, w, h, BASE)
+        scroll_pass(page, h)
         page.screenshot(path=SHOTS / f"home-{w}.png", full_page=True)
         page.screenshot(path=SHOTS / f"hero-{w}.png")
         check_overflow(page, f"home@{w}")
@@ -88,26 +75,24 @@ def run(b):
         if w == 1440:
             for sel in COPY:
                 col = page.evaluate("s => getComputedStyle(document.querySelector(s)).color", sel)
-                r = contrast(over_bg(col))
+                r = contrast(col)
                 check(r >= 4.5, f"contrast {sel}: {r:.2f}:1  [{col} on #060a10]")
-        ctx.close()
+        page.context.close()
 
-    ctx, page, errs = open_page(b, 1440, 900, BASE, reduced_motion="reduce")
-    settle(page, 900, scroll=False)
+    page, errs = load(b, 1440, 900, BASE, reduced_motion="reduce")
     n = page.evaluate("document.querySelectorAll('.reveal:not(.in)').length")
     check(n == 0, f"reduced-motion: reveals shown without scrolling (still hidden={n})")
     d = page.evaluate("getComputedStyle(document.getElementById('constellation')).display")
     check(d == "none", f"reduced-motion: constellation display={d}")
     page.screenshot(path=SHOTS / "reduced-motion.png", full_page=True)
     check_errs(errs, "reduced-motion")
-    ctx.close()
+    page.context.close()
 
-    ctx, page, errs = open_page(b, 1440, 900, f"{BASE}/404.html")
-    settle(page, 900, scroll=False)
+    page, errs = load(b, 1440, 900, f"{BASE}/404.html")
     page.screenshot(path=SHOTS / "404.png", full_page=True)
     check_overflow(page, "404")
     check_errs(errs, "404")
-    ctx.close()
+    page.context.close()
 
 
 if __name__ == "__main__":
