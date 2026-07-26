@@ -16,7 +16,7 @@ app development.
 | `404.html` | Not-found page, self-contained apart from `styles.css` |
 | `robots.txt` | Allows everything, points at the sitemap |
 | `sitemap.xml` | Single URL entry for the homepage |
-| `images/` | `animated-logo.svg`, `logo-static.svg` (reduced-motion fallback), `favicon.svg`, `og.png` |
+| `images/` | `animated-logo.svg`, `logo-static.svg` (reduced-motion fallback), `favicon.svg`, `og.jpg` |
 | `tools/` | Build and check scripts: `make_static_logo.py`, `og.html` + `render_og.py`, `qa.py` |
 
 `images/og.jpg` (1200x630 social card) is generated — rebuild it with
