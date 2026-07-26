@@ -19,7 +19,7 @@ app development.
 | `images/` | `animated-logo.svg`, `logo-static.svg` (reduced-motion fallback), `favicon.svg`, `og.png` |
 | `tools/` | Build and check scripts: `make_static_logo.py`, `og.html` + `render_og.py`, `qa.py` |
 
-`images/og.png` (1200x630 social card) is generated — rebuild it with
+`images/og.jpg` (1200x630 social card) is generated — rebuild it with
 `python tools/render_og.py` after editing `tools/og.html`.
 
 Run the checks against a local server:
