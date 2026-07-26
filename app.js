@@ -29,6 +29,21 @@
     targets.forEach(function (el) { io.observe(el); });
   }
 
+  /* cards lean toward the pointer; --mx/--my are -1..1 from the card's center */
+  if (!reduced && matchMedia('(hover: hover)').matches) {
+    document.querySelectorAll('.card, .step').forEach(function (el) {
+      el.addEventListener('pointermove', function (e) {
+        var b = el.getBoundingClientRect();
+        el.style.setProperty('--mx', ((e.clientX - b.left) / b.width * 2 - 1).toFixed(3));
+        el.style.setProperty('--my', ((e.clientY - b.top) / b.height * 2 - 1).toFixed(3));
+      });
+      el.addEventListener('pointerleave', function () {
+        el.style.setProperty('--mx', 0);
+        el.style.setProperty('--my', 0);
+      });
+    });
+  }
+
   /* SMIL ignores prefers-reduced-motion, so stop the orbit by hand */
   var orbit = document.getElementById('orbit');
   if (reduced && orbit) orbit.pauseAnimations();
