@@ -393,6 +393,11 @@ a { color: var(--brand-hi); }
   background: linear-gradient(180deg, rgba(9,24,38,.4), transparent);
   text-align: center;
 }
+.cta-band .eyebrow { justify-content: center; }
+.cta-band .h2 { margin-inline: auto; }
+.cta-band .cards { text-align: left; }
+.cta-close { padding-top: clamp(3.5rem, 7vw, 5.5rem); }
+
 .cta-title {
   margin: 0 0 clamp(1.8rem, 3.5vw, 2.4rem);
   font-family: var(--display); font-weight: 800;
