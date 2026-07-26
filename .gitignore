@@ -1,0 +1,8 @@
+# build/QA output, not source
+tools/shots/
+.vercel/
+__pycache__/
+
+# OS noise
+Thumbs.db
+.DS_Store
