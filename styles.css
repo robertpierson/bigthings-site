@@ -218,20 +218,24 @@ a { color: var(--brand-hi); }
 .hero::before {
   content: ""; position: absolute; inset: 0; z-index: 0;
   background: url("images/hero-plate.webp") center / cover no-repeat;
-  opacity: .32;
-  -webkit-mask-image: radial-gradient(ellipse 52% 46% at 50% 46%, transparent 46%, #000 82%),
+  opacity: .9;
+  mix-blend-mode: screen; /* black stays black, so only the orbits and dust show */
+  -webkit-mask-image: radial-gradient(ellipse 52% 46% at 50% 46%, transparent 40%, #000 84%),
                       linear-gradient(180deg, #000 55%, transparent 92%);
-          mask-image: radial-gradient(ellipse 52% 46% at 50% 46%, transparent 46%, #000 82%),
+          mask-image: radial-gradient(ellipse 52% 46% at 50% 46%, transparent 40%, #000 84%),
                       linear-gradient(180deg, #000 55%, transparent 92%);
   -webkit-mask-composite: source-in; mask-composite: intersect;
-  animation: plate-drift 40s ease-in-out infinite alternate;
-}
-@keyframes plate-drift {
-  from { transform: scale(1.04) translate(-.6%, 0); }
-  to   { transform: scale(1.12) translate(.6%, -1%); }
+  /* parallax: the plate falls slower than the copy and swells as the hero leaves */
+  transform: translateY(calc(var(--q, 0) * 16vh)) scale(calc(1.04 + var(--q, 0) * .18));
 }
 
-.hero > * { position: relative; z-index: 1; }
+.hero > *, .hero-logo { position: relative; z-index: 1; }
+
+/* the hero lifts and dissolves on the way out */
+.hero > *, .hero picture > .hero-logo {
+  opacity: calc(1 - var(--q, 0) * 1.3);
+  transform: translateY(calc(var(--q, 0) * -46px));
+}
 
 .hero {
   position: relative; overflow: hidden;
@@ -289,7 +293,9 @@ a { color: var(--brand-hi); }
 .socials-sm a { width: 40px; height: 40px; }
 
 /* hero load sequence */
-.hero-a, .hero-b, .hero-c, .hero-d, .hero-e, .hero-f { animation: fadeUp .9s var(--ease) both; }
+/* backwards, not both: once the load sequence finishes the scroll choreography
+   takes the transform back over */
+.hero-a, .hero-b, .hero-c, .hero-d, .hero-e, .hero-f { animation: fadeUp .9s var(--ease) backwards; }
 .hero-a { animation-delay: .05s; }
 .hero-b { animation-delay: .15s; }
 .hero-c { animation-delay: .25s; }
@@ -299,7 +305,7 @@ a { color: var(--brand-hi); }
 
 /* the wordmark catches a light sweep once the stack has settled */
 .hero-title.hero-c {
-  animation: fadeUp .9s var(--ease) .25s both, title-sweep 2.4s var(--ease) .9s both;
+  animation: fadeUp .9s var(--ease) .25s backwards, title-sweep 2.4s var(--ease) .9s backwards;
 }
 @keyframes title-sweep {
   from { background-position: 100% 0; }
@@ -481,22 +487,34 @@ a { color: var(--brand-hi); }
 .h2.reveal { clip-path: inset(0 100% -30% 0); transition: opacity .5s var(--ease), transform .8s var(--ease), clip-path 1s var(--ease); }
 .h2.reveal.in { clip-path: inset(0 0 -30% 0); }
 
-/* pointer tilt, driven by --mx/--my set in app.js */
-.card, .step {
-  transform: perspective(900px) rotateX(calc(var(--my, 0) * -3deg)) rotateY(calc(var(--mx, 0) * 3deg)) translateY(var(--lift, 0px));
+/* Cards, steps and slots are staggered off their section's entry progress, so
+   they rise at three different rates instead of on three fixed timers. --lift is
+   hover, --mx/--my are the pointer tilt, both set alongside the same transform. */
+.card, .step, .slot {
+  opacity: clamp(0, calc(var(--p, 1) * 1.9 - .45), 1);
+  --rise: calc((1 - var(--p, 1)) * 40px);
 }
+.cards > :nth-child(2), .steps > :nth-child(2) { --rise: calc((1 - var(--p, 1)) * 64px); }
+.cards > :nth-child(3), .steps > :nth-child(3) { --rise: calc((1 - var(--p, 1)) * 88px); }
+
+.card, .step {
+  transform: perspective(900px)
+             rotateX(calc(var(--my, 0) * -3deg))
+             rotateY(calc(var(--mx, 0) * 3deg))
+             translateY(calc(var(--lift, 0px) + var(--rise, 0px)));
+}
+.slot { transform: translateY(var(--rise, 0px)); }
 .card:hover, .step:hover { --lift: -4px; }
 
-/* the orbit leans as the section passes through the viewport, where supported */
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .orbit { animation: orbit-lean linear both; animation-timeline: view(); animation-range: entry 10% exit 90%; }
-  }
+/* the orbit leans and its dashes stream as the section crosses the viewport */
+.orbit {
+  transform: translate(-50%, -50%)
+             rotate(calc((var(--p, .5) - .5) * 16deg))
+             scale(calc(.92 + var(--p, .5) * .16));
 }
-@keyframes orbit-lean {
-  from { transform: translate(-50%, -50%) rotate(-7deg) scale(.94); }
-  to   { transform: translate(-50%, -50%) rotate(7deg) scale(1.06); }
-}
+#orbit-track { stroke-dashoffset: calc(var(--p, 0) * -320px); }
+
+.cta-close { transform: scale(calc(.965 + var(--p, 1) * .035)); }
 .cards .reveal:nth-child(2), .steps .reveal:nth-child(2) { transition-delay: .1s; }
 .cards .reveal:nth-child(3), .steps .reveal:nth-child(3) { transition-delay: .2s; }
 
