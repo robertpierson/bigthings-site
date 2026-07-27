@@ -194,13 +194,16 @@
     var root = document.documentElement;
 
     var lastY = scrollY, vel = 0;
+    var toTop = document.querySelector('.to-top');
 
     var measure = function () {
       ticking = false;
       sweep();
       var ih = innerHeight;
       var max = root.scrollHeight - ih;
-      root.style.setProperty('--sp', max > 0 ? (scrollY / max).toFixed(4) : 0);
+      var sp = max > 0 ? scrollY / max : 0;
+      root.style.setProperty('--sp', sp.toFixed(4));
+      if (toTop) toTop.classList.toggle('on', sp > 0.45);
 
       /* --v is scroll velocity, clamped to -1..1 and eased back to rest, so the
          page can lean into a flick and settle when it stops */
@@ -262,14 +265,22 @@
       el.addEventListener('pointerleave', reset);
     });
 
-    /* a soft light follows the pointer across the hero */
+    /* a soft light follows the pointer across the hero, and --hx/--hy drive the
+       depth: each layer of the stack drifts by its own amount */
     var heroEl = document.querySelector('.hero');
     if (heroEl) {
       heroEl.addEventListener('pointermove', function (e) {
         var b = heroEl.getBoundingClientRect();
-        heroEl.style.setProperty('--cx', ((e.clientX - b.left) / b.width * 100).toFixed(2) + '%');
-        heroEl.style.setProperty('--cy', ((e.clientY - b.top) / b.height * 100).toFixed(2) + '%');
+        var fx = (e.clientX - b.left) / b.width, fy = (e.clientY - b.top) / b.height;
+        heroEl.style.setProperty('--cx', (fx * 100).toFixed(2) + '%');
+        heroEl.style.setProperty('--cy', (fy * 100).toFixed(2) + '%');
+        heroEl.style.setProperty('--hx', (fx * 2 - 1).toFixed(3));
+        heroEl.style.setProperty('--hy', (fy * 2 - 1).toFixed(3));
       }, { passive: true });
+      heroEl.addEventListener('pointerleave', function () {
+        heroEl.style.setProperty('--hx', 0);
+        heroEl.style.setProperty('--hy', 0);
+      });
     }
   }
 
