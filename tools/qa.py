@@ -1,10 +1,11 @@
-"""QA sweep for bigthings-site against the server already running on :8010.
-Writes only tools/shots/*.png.  Run: python tools/qa.py"""
-import re, sys
+"""QA sweep for bigthings-site against a server that is already running.
+Writes only tools/shots/*.png.  Run: python tools/qa.py
+Point it elsewhere with QA_BASE=http://127.0.0.1:8011 python tools/qa.py"""
+import os, re, sys
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
-BASE = "http://localhost:8010"
+BASE = os.environ.get("QA_BASE", "http://localhost:8010").rstrip("/")
 SHOTS = Path(__file__).resolve().parent / "shots"
 VIEWPORTS = [(1440, 900), (1024, 768), (768, 1024), (390, 844)]
 COPY = [".hero-lede", ".card p", ".faq details p", ".legal", ".slot p"]
