@@ -55,9 +55,40 @@
     }).join('');
   }
 
+  function splitWords(el) {
+    var text = (el.dataset.text || el.textContent).trim().replace(/\s+/g, ' ');
+    el.dataset.text = text;
+    el.setAttribute('aria-label', text);
+    el.innerHTML = text.split(' ').map(function (w, i) {
+      return '<span class="wd" aria-hidden="true" style="--i:' + i + '">' + w + '</span>';
+    }).join(' ');
+  }
+
   if (!reduced) {
     var h1 = document.querySelector('.hero-title');
     if (h1) { splitChars(h1); h1.classList.add('is-split'); }
+
+    var lede = document.querySelector('.hero-lede');
+    if (lede) {
+      /* Walk the text nodes rather than the markup: splitting innerHTML drops
+         the space in front of <b>, which welds "be" onto "big". */
+      [].slice.call(lede.childNodes).forEach(function (node) {
+        if (node.nodeType === 1) { node.classList.add('wd'); return; }   // <b> animates too
+        if (node.nodeType !== 3) return;
+        var frag = document.createDocumentFragment();
+        node.nodeValue.split(/(\s+)/).forEach(function (tok) {
+          if (!tok) return;
+          if (/^\s+$/.test(tok)) return frag.appendChild(document.createTextNode(' '));
+          var s = document.createElement('span');
+          s.className = 'wd';
+          s.textContent = tok;
+          frag.appendChild(s);
+        });
+        lede.replaceChild(frag, node);
+      });
+      [].forEach.call(lede.querySelectorAll('.wd'), function (n, i) { n.style.setProperty('--i', i); });
+      lede.classList.add('is-split');
+    }
 
     [].forEach.call(document.querySelectorAll('.h2'), function (el) {
       splitLines(el);
@@ -86,13 +117,41 @@
      as revealed. */
   var pending = [].slice.call(document.querySelectorAll('.reveal'));
 
+  /* Monospace labels decode into place: the type is already a terminal voice,
+     so the label resolves character by character out of noise. */
+  var GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/\\<>[]{}#*+=-';
+
+  function decode(el) {
+    var node = el.lastChild;                       // the text, after any dot span
+    if (!node || node.nodeType !== 3) return;
+    var final = node.nodeValue, len = final.length, step = 0;
+    var timer = setInterval(function () {
+      step++;
+      var out = '';
+      for (var i = 0; i < len; i++) {
+        if (final[i] === ' ' || i < step - 3) out += final[i];
+        else if (i < step + 6) out += GLYPHS[(Math.random() * GLYPHS.length) | 0];
+        else out += ' ';
+      }
+      node.nodeValue = out;
+      if (step - 3 > len) { clearInterval(timer); node.nodeValue = final; }
+    }, 28);
+  }
+
   function sweep() {
     for (var i = pending.length - 1; i >= 0; i--) {
-      if (pending[i].getBoundingClientRect().top < innerHeight * 0.88) {
-        pending[i].classList.add('in');
+      var el = pending[i];
+      if (el.getBoundingClientRect().top < innerHeight * 0.88) {
+        el.classList.add('in');
+        if (!reduced && el.classList.contains('eyebrow')) decode(el);
         pending.splice(i, 1);
       }
     }
+  }
+
+  if (!reduced) {
+    var heroLabel = document.querySelector('.hero .eyebrow');
+    if (heroLabel) setTimeout(function () { decode(heroLabel); }, 300);
   }
 
   if (reduced) {
@@ -111,12 +170,23 @@
 
     var root = document.documentElement;
 
+    var lastY = scrollY, vel = 0;
+
     var measure = function () {
       ticking = false;
       sweep();
       var ih = innerHeight;
       var max = root.scrollHeight - ih;
       root.style.setProperty('--sp', max > 0 ? (scrollY / max).toFixed(4) : 0);
+
+      /* --v is scroll velocity, clamped to -1..1 and eased back to rest, so the
+         page can lean into a flick and settle when it stops */
+      var raw = (scrollY - lastY) / 90;
+      lastY = scrollY;
+      vel += (Math.max(-1, Math.min(1, raw)) - vel) * 0.25;
+      if (Math.abs(vel) < 0.001) vel = 0;
+      root.style.setProperty('--v', vel.toFixed(4));
+      if (vel !== 0) schedule();   // keep easing after the scroll stops
       for (var i = 0; i < tracked.length; i++) {
         var el = tracked[i], b = el.getBoundingClientRect();
         var p = (ih - b.top) / (ih * 0.85);
