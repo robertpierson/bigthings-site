@@ -363,7 +363,31 @@ a { color: var(--brand-hi); }
 
 /* ---------- how it works / orbit ---------- */
 
-.orbit-section { overflow: hidden; }
+.orbit-section { overflow: clip; }
+
+/* Programs pins: the stage holds while the page scrolls a further screen and a
+   half, and the three steps arrive one at a time on that scrub. Only where
+   there is room for it — anywhere else the section stays a normal block. */
+@media (min-width: 860px) and (min-height: 720px) and (prefers-reduced-motion: no-preference) {
+  .pin-track { height: 250vh; }
+  .pin-stage {
+    position: sticky; top: 0; height: 100vh;
+    display: flex; align-items: center;
+  }
+  .orbit-section .steps > * {
+    --act: clamp(0, calc((var(--q, 1) - .12 - var(--o, 0)) * 5), 1);
+    --rise: calc((1 - var(--act)) * 70px);
+    opacity: var(--act);
+  }
+  .orbit-section .steps > :nth-child(2) { --o: .13; }
+  .orbit-section .steps > :nth-child(3) { --o: .26; }
+  .orbit-section .orbit {
+    transform: translate(-50%, -50%)
+               rotate(calc((var(--q, .5) - .3) * 22deg))
+               scale(calc(.9 + var(--q, .5) * .3));
+  }
+  .orbit-section #orbit-draw { stroke-dashoffset: calc(100 - var(--q, 1) * 130); }
+}
 
 /* the track is sized to the step cards, not the section, so it always reads as
    one orbit passing behind them rather than a stray rule across the heading */
@@ -517,6 +541,17 @@ a { color: var(--brand-hi); }
 }
 .h2.is-split.in .line-i { transform: none; }
 
+/* the lede assembles word by word under the wordmark */
+.hero-lede.is-split .wd {
+  display: inline-block;
+  animation: word-in .7s var(--ease) backwards;
+  animation-delay: calc(1s + var(--i) * .028s);
+}
+@keyframes word-in {
+  from { opacity: 0; transform: translateY(.6em); filter: blur(4px); }
+  to   { opacity: 1; transform: none; filter: none; }
+}
+
 /* once the characters carry the entry, the block-level fade is redundant —
    the wordmark keeps only its light sweep */
 .hero-title.is-split {
@@ -613,6 +648,37 @@ a { color: var(--brand-hi); }
 }
 .marquee-track i { color: var(--brand); font-style: normal; padding: 0 .5em; }
 @keyframes marquee { to { transform: translateX(-50%); } }
+
+/* ---- scroll velocity ----
+   The page leans into a flick and settles when it stops. Small numbers on
+   purpose: this reads as weight, not as a wobble. */
+.section .wrap, .cta-band .wrap, .footer-inner {
+  transform: skewY(calc(var(--v, 0) * .5deg));
+}
+.marquee { transform: translateX(calc(var(--v, 0) * -60px)); }
+.marquee-track span { transform: scaleX(calc(1 + var(--v, 0) * .015)); }
+.brand-mark { transform: rotate(calc(var(--sp, 0) * 220deg)); }
+.constellation { transform: translateY(calc(var(--v, 0) * 8px)); }
+
+/* cards carry a light that follows the pointer inside them */
+.card::after, .step::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  border-radius: inherit;
+  background: radial-gradient(220px circle at calc(50% + var(--mx, 0) * 50%) calc(50% + var(--my, 0) * 50%),
+              rgba(111,195,232,.13), transparent 70%);
+  opacity: 0; transition: opacity .35s var(--ease);
+}
+.card:hover::after, .step:hover::after { opacity: 1; }
+.step { position: relative; overflow: hidden; }
+
+/* the open slots keep their dashes moving, so an empty showcase still reads as live */
+.slot {
+  background-image: repeating-linear-gradient(115deg,
+    rgba(47,137,197,.07) 0 12px, transparent 12px 34px);
+  background-size: 200% 100%;
+  animation: slot-drift 14s linear infinite;
+}
+@keyframes slot-drift { to { background-position: -200% 0; } }
 
 /* ---- pointer magnetics ---- */
 .btn { transform: translate(var(--px, 0), var(--py, 0)); }
