@@ -29,6 +29,38 @@
     targets.forEach(function (el) { io.observe(el); });
   }
 
+  /* Scroll choreography: publish two progress values per tracked section and let
+     CSS decide what moves. --p is entry (0 when the top edge is at the viewport
+     bottom, 1 once it has risen a screen), --q is exit (0 until the top passes
+     the fold, 1 once the section has scrolled clear). Cheaper than a library and
+     it keeps every transform in the stylesheet. */
+  var tracked = [].slice.call(document.querySelectorAll('[data-scroll]'));
+  if (!reduced && tracked.length) {
+    var ticking = false;
+
+    var measure = function () {
+      ticking = false;
+      var ih = innerHeight;
+      for (var i = 0; i < tracked.length; i++) {
+        var el = tracked[i], b = el.getBoundingClientRect();
+        var p = (ih - b.top) / (ih * 0.85);
+        var q = -b.top / (b.height * 0.9);
+        el.style.setProperty('--p', (p < 0 ? 0 : p > 1 ? 1 : p).toFixed(4));
+        el.style.setProperty('--q', (q < 0 ? 0 : q > 1 ? 1 : q).toFixed(4));
+      }
+    };
+
+    var schedule = function () {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(measure);
+    };
+
+    addEventListener('scroll', schedule, { passive: true });
+    addEventListener('resize', schedule);
+    measure();
+  }
+
   /* cards lean toward the pointer; --mx/--my are -1..1 from the card's center */
   if (!reduced && matchMedia('(hover: hover)').matches) {
     document.querySelectorAll('.card, .step').forEach(function (el) {
