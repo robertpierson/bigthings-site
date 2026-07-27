@@ -125,6 +125,19 @@
     var node = el.lastChild;                       // the text, after any dot span
     if (!node || node.nodeType !== 3) return;
     var final = node.nodeValue, len = final.length, step = 0;
+
+    /* The scramble mutates live text, so hand assistive tech a stable copy and
+       hide the animating one for the second it is nonsense. */
+    if (!el.querySelector('.sr-only')) {
+      var sr = document.createElement('span');
+      sr.className = 'sr-only';
+      sr.textContent = final;
+      el.insertBefore(sr, node);
+      var vis = document.createElement('span');
+      vis.setAttribute('aria-hidden', 'true');
+      el.replaceChild(vis, node);
+      vis.appendChild(node);
+    }
     var timer = setInterval(function () {
       step++;
       var out = '';
