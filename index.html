@@ -150,6 +150,7 @@
       <div class="orbit-wrap">
       <svg class="orbit" viewBox="0 0 1200 460" preserveAspectRatio="none" aria-hidden="true" id="orbit" xmlns:xlink="http://www.w3.org/1999/xlink">
         <ellipse id="orbit-track" cx="600" cy="230" rx="580" ry="200" fill="none" stroke="#2f89c5" stroke-width="2" stroke-dasharray="3 9"/>
+        <ellipse id="orbit-draw" cx="600" cy="230" rx="580" ry="200" fill="none" stroke="#6fc3e8" stroke-width="2" pathLength="100"/>
         <ellipse cx="600" cy="230" rx="420" ry="140" fill="none" stroke="#2f89c5" stroke-width="1.5" stroke-dasharray="3 11" opacity=".45" transform="rotate(-10 600 230)"/>
         <circle r="6" fill="#6fc3e8"><animateMotion dur="18s" repeatCount="indefinite" rotate="auto"><mpath href="#orbit-track" xlink:href="#orbit-track"/></animateMotion></circle>
         <circle r="4" fill="#2f89c5"><animateMotion dur="26s" begin="-9s" repeatCount="indefinite" rotate="auto"><mpath href="#orbit-track" xlink:href="#orbit-track"/></animateMotion></circle>
@@ -193,8 +194,16 @@
     </div>
   </section>
 
+  <!-- what "community" means here, on a loop -->
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee-track">
+      <span>clubs<i>·</i>campuses<i>·</i>dorm floors<i>·</i>game servers<i>·</i>nonprofits<i>·</i>libraries<i>·</i>maker spaces<i>·</i>student orgs<i>·</i>neighborhoods<i>·</i>volunteer crews<i>·</i></span>
+      <span>clubs<i>·</i>campuses<i>·</i>dorm floors<i>·</i>game servers<i>·</i>nonprofits<i>·</i>libraries<i>·</i>maker spaces<i>·</i>student orgs<i>·</i>neighborhoods<i>·</i>volunteer crews<i>·</i></span>
+    </div>
+  </div>
+
   <!-- FAQ -->
-  <section class="section" id="faq">
+  <section class="section" id="faq" data-scroll>
     <div class="wrap">
       <p class="eyebrow reveal">FAQ</p>
       <h2 class="h2 reveal">Questions we get.</h2>
