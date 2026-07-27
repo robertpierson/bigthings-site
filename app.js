@@ -78,19 +78,26 @@
     });
   }
 
-  /* scroll reveals */
-  var targets = document.querySelectorAll('.reveal');
-  if (reduced || !('IntersectionObserver' in window)) {
-    targets.forEach(function (el) { el.classList.add('in'); });
-  } else {
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) {
-        if (!e.isIntersecting) return;
-        e.target.classList.add('in');
-        io.unobserve(e.target);
-      });
-    }, { rootMargin: '0px 0px -12% 0px' });
-    targets.forEach(function (el) { io.observe(el); });
+  /* Scroll reveals.
+     Swept on scroll rather than observed: IntersectionObserver only samples at
+     frame boundaries, so an instant jump past an element — a hash link, End,
+     a scripted scroll — can skip it and leave it hidden for good. A sweep can
+     only ever be late, never wrong, and anything already above the fold counts
+     as revealed. */
+  var pending = [].slice.call(document.querySelectorAll('.reveal'));
+
+  function sweep() {
+    for (var i = pending.length - 1; i >= 0; i--) {
+      if (pending[i].getBoundingClientRect().top < innerHeight * 0.88) {
+        pending[i].classList.add('in');
+        pending.splice(i, 1);
+      }
+    }
+  }
+
+  if (reduced) {
+    pending.forEach(function (el) { el.classList.add('in'); });
+    pending.length = 0;
   }
 
   /* Scroll choreography: publish two progress values per tracked section and let
@@ -99,13 +106,14 @@
      the fold, 1 once the section has scrolled clear). Cheaper than a library and
      it keeps every transform in the stylesheet. */
   var tracked = [].slice.call(document.querySelectorAll('[data-scroll]'));
-  if (!reduced && tracked.length) {
+  if (!reduced) {
     var ticking = false;
 
     var root = document.documentElement;
 
     var measure = function () {
       ticking = false;
+      sweep();
       var ih = innerHeight;
       var max = root.scrollHeight - ih;
       root.style.setProperty('--sp', max > 0 ? (scrollY / max).toFixed(4) : 0);
