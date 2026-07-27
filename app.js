@@ -109,6 +109,16 @@
     });
   }
 
+  /* Nav and footer links roll to a duplicate of themselves on hover. The second
+     copy is aria-hidden so the link is not announced twice. */
+  if (!reduced) {
+    [].forEach.call(document.querySelectorAll('.nav-links a, .footer-links a'), function (a) {
+      var t = a.textContent;
+      a.innerHTML = '<span class="roll"><span>' + t + '</span>' +
+                    '<span aria-hidden="true">' + t + '</span></span>';
+    });
+  }
+
   /* Scroll reveals.
      Swept on scroll rather than observed: IntersectionObserver only samples at
      frame boundaries, so an instant jump past an element — a hash link, End,
@@ -261,6 +271,36 @@
         heroEl.style.setProperty('--cy', ((e.clientY - b.top) / b.height * 100).toFixed(2) + '%');
       }, { passive: true });
     }
+  }
+
+  /* A ring trails the pointer and swells over anything interactive. The native
+     cursor is left alone — this is an addition, not a replacement. */
+  if (!reduced && matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    var ring = document.createElement('div');
+    ring.className = 'cursor-ring';
+    ring.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(ring);
+
+    var tx = innerWidth / 2, ty = innerHeight / 2, rx = tx, ry = ty, ringRaf = 0;
+
+    var ringLoop = function () {
+      rx += (tx - rx) * 0.18;
+      ry += (ty - ry) * 0.18;
+      ring.style.transform = 'translate3d(' + (rx - 20) + 'px,' + (ry - 20) + 'px,0)';
+      ringRaf = (Math.abs(tx - rx) > 0.4 || Math.abs(ty - ry) > 0.4) ? requestAnimationFrame(ringLoop) : 0;
+    };
+
+    addEventListener('pointermove', function (e) {
+      tx = e.clientX; ty = e.clientY;
+      ring.classList.add('on');
+      var hot = e.target.closest && e.target.closest('a, button, summary, .card, .step, .slot');
+      ring.classList.toggle('hot', !!hot);
+      if (!ringRaf) ringRaf = requestAnimationFrame(ringLoop);
+    }, { passive: true });
+
+    addEventListener('pointerdown', function () { ring.classList.add('press'); });
+    addEventListener('pointerup', function () { ring.classList.remove('press'); });
+    document.addEventListener('pointerleave', function () { ring.classList.remove('on'); });
   }
 
   /* SMIL ignores prefers-reduced-motion, so stop the orbit by hand */
