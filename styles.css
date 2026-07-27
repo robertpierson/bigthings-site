@@ -709,6 +709,43 @@ a { color: var(--brand-hi); }
 }
 @keyframes slot-drift { to { background-position: -200% 0; } }
 
+/* ---- rolling links ---- */
+.roll { display: block; overflow: hidden; height: 1.2em; }
+.roll > span { display: block; height: 1.2em; line-height: 1.2em; transition: transform .42s var(--ease); }
+.roll > span:last-child { color: var(--brand-hi); }
+a:hover .roll > span, a:focus-visible .roll > span { transform: translateY(-1.2em); }
+
+/* ---- cursor ring ---- */
+.cursor-ring {
+  position: fixed; top: 0; left: 0; z-index: 150;
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 1px solid rgba(111,195,232,.55);
+  pointer-events: none; opacity: 0;
+  transition: opacity .3s var(--ease), width .25s var(--ease), height .25s var(--ease),
+              margin .25s var(--ease), background-color .25s var(--ease), border-color .25s var(--ease);
+}
+.cursor-ring.on { opacity: 1; }
+.cursor-ring.hot {
+  width: 66px; height: 66px; margin: -13px;
+  background: rgba(111,195,232,.08); border-color: var(--brand-hi);
+}
+.cursor-ring.press { width: 28px; height: 28px; margin: 6px; }
+
+/* ---- shine across the solid button ---- */
+.btn { position: relative; overflow: hidden; isolation: isolate; }
+.btn::before {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.28) 50%, transparent 65%);
+  transform: translateX(-120%);
+  transition: transform .7s var(--ease);
+}
+.btn:hover::before, .btn:focus-visible::before { transform: translateX(120%); }
+
+/* ---- section labels ride along ---- */
+@media (min-width: 860px) {
+  .section .wrap > .eyebrow { position: sticky; top: 5.2rem; z-index: 2; }
+}
+
 /* ---- pointer magnetics ---- */
 .btn { transform: translate(var(--px, 0), var(--py, 0)); }
 .btn:hover { transform: translate(var(--px, 0), calc(var(--py, 0) - 2px)); }
