@@ -1,4 +1,4 @@
-"""QA sweep for bigthings-site against a server that is already running.
+"""QA sweep for reenvision against a server that is already running.
 Writes only tools/shots/*.png.  Run: python tools/qa.py
 Point it elsewhere with QA_BASE=http://127.0.0.1:8011 python tools/qa.py"""
 import os, re, sys

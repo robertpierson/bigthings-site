@@ -1,4 +1,4 @@
-/* Big Things — nav state, scroll reveals, constellation field.
+/* reenvision — nav state, scroll reveals, constellation field.
    Replaces particles.js 2.0.0 (unmaintained, ~25KB) with the ~60 lines actually used. */
 
 (function () {
