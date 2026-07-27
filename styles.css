@@ -597,7 +597,13 @@ a { color: var(--brand-hi); }
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
           mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
 }
-.marquee-track { display: flex; width: max-content; animation: marquee 38s linear infinite; }
+.marquee-track {
+  display: flex; width: max-content;
+  animation: marquee 38s linear infinite;
+  will-change: transform;
+}
+/* hovering pauses it, which is also the pause control SC 2.2.2 asks for */
+.marquee:hover .marquee-track, .marquee:focus-within .marquee-track { animation-play-state: paused; }
 .marquee-track span {
   display: flex; align-items: center; flex: 0 0 auto;
   font-family: var(--display); font-weight: 700;
@@ -632,6 +638,24 @@ a { color: var(--brand-hi); }
 }
 .cards .reveal:nth-child(2), .steps .reveal:nth-child(2) { transition-delay: .1s; }
 .cards .reveal:nth-child(3), .steps .reveal:nth-child(3) { transition-delay: .2s; }
+
+/* ---------- print ---------- */
+
+@media print {
+  .bg-drift, .orb, .constellation, .vignette, .nav, .marquee,
+  .hero::before, .hero::after, .orbit { display: none !important; }
+  body { background: #fff; color: #000; }
+  .hero { min-height: 0; padding-block: 2rem; }
+  .hero-title { color: #000; -webkit-text-fill-color: #000; text-shadow: none; }
+  .section { padding-block: 1.5rem; }
+  .card, .step, .slot, .faq details, .reveal, .h2 .line-i {
+    opacity: 1 !important; transform: none !important;
+    border-color: #bbb; background: none; box-shadow: none;
+  }
+  .card p, .step p, .lede, .note, .faq details p, .legal { color: #333; }
+  .faq details p { display: block; }        /* answers print whether open or not */
+  a[href^="http"]::after { content: " (" attr(href) ")"; font-size: .8em; color: #555; }
+}
 
 /* ---------- reduced motion ---------- */
 
