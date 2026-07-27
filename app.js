@@ -14,6 +14,70 @@
     onScroll();
   }
 
+  /* ---- type splitting ----
+     The h1 goes to characters, the section headings to lines. Both keep the
+     original string on aria-label so nothing changes for a screen reader. */
+  var splitTargets = [];
+
+  function splitChars(el) {
+    var text = (el.dataset.text || el.textContent).trim();
+    el.dataset.text = text;
+    el.setAttribute('aria-label', text);
+    el.textContent = '';
+    for (var i = 0; i < text.length; i++) {
+      var s = document.createElement('span');
+      s.className = 'char';
+      s.textContent = text[i] === ' ' ? ' ' : text[i];
+      s.style.setProperty('--i', i);
+      s.setAttribute('aria-hidden', 'true');
+      el.appendChild(s);
+    }
+  }
+
+  function splitLines(el) {
+    var text = (el.dataset.text || el.textContent).trim().replace(/\s+/g, ' ');
+    el.dataset.text = text;
+    el.setAttribute('aria-label', text);
+    // lay the words out first so the browser tells us where the line breaks fall
+    el.innerHTML = text.split(' ').map(function (w) {
+      return '<span class="w">' + w + '</span>';
+    }).join(' ');
+
+    var lines = [], top = null, cur = null;
+    [].forEach.call(el.querySelectorAll('.w'), function (s) {
+      if (s.offsetTop !== top) { top = s.offsetTop; cur = []; lines.push(cur); }
+      cur.push(s.textContent);
+    });
+
+    el.innerHTML = lines.map(function (words, i) {
+      return '<span class="line" aria-hidden="true"><span class="line-i" style="--i:' + i + '">' +
+             words.join(' ') + '</span></span>';
+    }).join('');
+  }
+
+  if (!reduced) {
+    var h1 = document.querySelector('.hero-title');
+    if (h1) { splitChars(h1); h1.classList.add('is-split'); }
+
+    [].forEach.call(document.querySelectorAll('.h2'), function (el) {
+      splitLines(el);
+      el.classList.add('is-split');
+      splitTargets.push(el);
+    });
+
+    var reflow;
+    addEventListener('resize', function () {
+      clearTimeout(reflow);
+      reflow = setTimeout(function () {
+        splitTargets.forEach(function (el) {
+          var wasIn = el.classList.contains('in');
+          splitLines(el);
+          if (wasIn) el.classList.add('in');
+        });
+      }, 200);
+    });
+  }
+
   /* scroll reveals */
   var targets = document.querySelectorAll('.reveal');
   if (reduced || !('IntersectionObserver' in window)) {
@@ -38,9 +102,13 @@
   if (!reduced && tracked.length) {
     var ticking = false;
 
+    var root = document.documentElement;
+
     var measure = function () {
       ticking = false;
       var ih = innerHeight;
+      var max = root.scrollHeight - ih;
+      root.style.setProperty('--sp', max > 0 ? (scrollY / max).toFixed(4) : 0);
       for (var i = 0; i < tracked.length; i++) {
         var el = tracked[i], b = el.getBoundingClientRect();
         var p = (ih - b.top) / (ih * 0.85);
@@ -74,6 +142,34 @@
         el.style.setProperty('--my', 0);
       });
     });
+  }
+
+  /* buttons pull toward the pointer when it gets close */
+  if (!reduced && matchMedia('(hover: hover)').matches) {
+    var PULL = 90;
+    [].forEach.call(document.querySelectorAll('.btn, .btn-ghost, .socials a'), function (el) {
+      var reset = function () { el.style.setProperty('--px', 0); el.style.setProperty('--py', 0); };
+      el.addEventListener('pointermove', function (e) {
+        var b = el.getBoundingClientRect();
+        var dx = e.clientX - (b.left + b.width / 2), dy = e.clientY - (b.top + b.height / 2);
+        var d = Math.hypot(dx, dy);
+        if (d > PULL) return reset();
+        var k = (1 - d / PULL) * 0.35;
+        el.style.setProperty('--px', (dx * k).toFixed(2) + 'px');
+        el.style.setProperty('--py', (dy * k).toFixed(2) + 'px');
+      });
+      el.addEventListener('pointerleave', reset);
+    });
+
+    /* a soft light follows the pointer across the hero */
+    var heroEl = document.querySelector('.hero');
+    if (heroEl) {
+      heroEl.addEventListener('pointermove', function (e) {
+        var b = heroEl.getBoundingClientRect();
+        heroEl.style.setProperty('--cx', ((e.clientX - b.left) / b.width * 100).toFixed(2) + '%');
+        heroEl.style.setProperty('--cy', ((e.clientY - b.top) / b.height * 100).toFixed(2) + '%');
+      }, { passive: true });
+    }
   }
 
   /* SMIL ignores prefers-reduced-motion, so stop the orbit by hand */
