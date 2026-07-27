@@ -275,11 +275,21 @@ a { color: var(--brand-hi); }
 
 .hero > *, .hero-logo { position: relative; z-index: 1; }
 
-/* the hero lifts and dissolves on the way out */
+/* the hero lifts and dissolves on the way out, and each layer drifts with the
+   pointer by its own --depth, so the stack reads as three-dimensional */
 .hero > *, .hero picture > .hero-logo {
   opacity: calc(1 - var(--q, 0) * 1.3);
-  transform: translateY(calc(var(--q, 0) * -46px));
+  transform: translate3d(calc(var(--hx, 0) * var(--depth, 0px)),
+                         calc(var(--q, 0) * -46px + var(--hy, 0) * var(--depth, 0px)), 0);
+  transition: transform .5s var(--ease);
 }
+.hero .eyebrow  { --depth: 6px; }
+.hero-logo      { --depth: 22px; }
+.hero-title     { --depth: 14px; }
+.hero-lede      { --depth: 9px; }
+.hero-cta       { --depth: 5px; }
+.hero .socials  { --depth: 4px; }
+.hero::before   { will-change: transform; }
 
 .hero {
   position: relative; overflow: hidden;
@@ -708,6 +718,49 @@ a { color: var(--brand-hi); }
   animation: slot-drift 14s linear infinite;
 }
 @keyframes slot-drift { to { background-position: -200% 0; } }
+
+/* ---- FAQ opens instead of jumping ----
+   Native interpolation to auto height where the browser supports it; everywhere
+   else it snaps exactly as a details element always has. */
+@supports (interpolate-size: allow-keywords) {
+  :root { interpolate-size: allow-keywords; }
+  .faq details::details-content {
+    block-size: 0; overflow: hidden; opacity: 0;
+    transition: block-size .42s var(--ease), opacity .32s var(--ease),
+                content-visibility .42s allow-discrete;
+  }
+  .faq details[open]::details-content { block-size: auto; opacity: 1; }
+}
+
+/* ---- an open slot says what it wants ---- */
+.slot { position: relative; }
+.slot p { transition: opacity .3s var(--ease), transform .3s var(--ease); }
+.slot:hover p { opacity: 0; transform: translateY(-6px); }
+.slot::after {
+  content: "Bring yours →";
+  position: absolute; left: 0; right: 0; bottom: clamp(1.5rem, 3vw, 2rem);
+  color: var(--brand-hi); font-size: .95rem;
+  opacity: 0; transform: translateY(6px);
+  transition: opacity .3s var(--ease), transform .3s var(--ease);
+}
+.slot:hover::after { opacity: 1; transform: none; }
+
+/* ---- back to the top, once there is a top to go back to ---- */
+.to-top {
+  position: fixed; right: clamp(1rem, 3vw, 2rem); bottom: clamp(1rem, 3vw, 2rem);
+  z-index: 60; width: 46px; height: 46px; border-radius: 50%;
+  display: grid; place-items: center;
+  color: var(--brand-hi); text-decoration: none;
+  background: rgba(9,20,32,.75); border: 1px solid var(--line-hi);
+  backdrop-filter: blur(10px);
+  opacity: clamp(0, calc((var(--sp, 0) - .45) * 6), 1);
+  transform: translateY(calc((1 - clamp(0, calc((var(--sp, 0) - .45) * 6), 1)) * 14px));
+  pointer-events: none;
+  transition: border-color .3s var(--ease), color .3s var(--ease), background-color .3s var(--ease);
+}
+.to-top:hover { color: var(--paper); border-color: var(--brand); background: rgba(28,110,168,.5); }
+.to-top svg { width: 18px; height: 18px; }
+.to-top.on { pointer-events: auto; }   /* only clickable once it is actually visible */
 
 /* ---- rolling links ---- */
 .roll { display: block; overflow: hidden; height: 1.2em; }
