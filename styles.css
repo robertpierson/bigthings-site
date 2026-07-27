@@ -676,6 +676,7 @@ a { color: var(--brand-hi); }
   animation: marquee 38s linear infinite;
   will-change: transform;
 }
+.marquee.up .marquee-track { animation-direction: reverse; }
 /* hovering pauses it, which is also the pause control SC 2.2.2 asks for */
 .marquee:hover .marquee-track, .marquee:focus-within .marquee-track { animation-play-state: paused; }
 .marquee-track span {
@@ -687,6 +688,42 @@ a { color: var(--brand-hi); }
 }
 .marquee-track i { color: var(--brand); font-style: normal; padding: 0 .5em; }
 @keyframes marquee { to { transform: translateX(-50%); } }
+
+/* ---- the nav tightens once you are past the hero ---- */
+.nav-inner { transition: padding .35s var(--ease); }
+.nav.scrolled .nav-inner { padding-block: .55rem; }
+.nav .brand-mark { transition: width .35s var(--ease), height .35s var(--ease), transform .1s linear; }
+.nav.scrolled .brand-mark { width: 22px; height: 22px; }
+
+/* ---- the ambient wash turns as the page advances ---- */
+.bg-drift { filter: hue-rotate(calc(var(--sp, 0) * 26deg)); }
+.orb-1 { filter: blur(80px) hue-rotate(calc(var(--sp, 0) * -18deg)); }
+
+/* ---- the footer arrives as a finale ---- */
+.footer .brand, .footer-links, .footer .socials, .legal {
+  opacity: clamp(0, calc((var(--p, 1) - .1) * 4), 1);
+  transform: translateY(calc((1 - clamp(0, calc((var(--p, 1) - .1) * 4), 1)) * 26px));
+  transition: opacity .5s var(--ease), transform .5s var(--ease);
+}
+.footer-links { transition-delay: .08s; }
+.footer .socials { transition-delay: .16s; }
+.legal { transition-delay: .24s; }
+
+/* ---- the primary call to action breathes until it is used ----
+   box-shadow, not a pseudo-element: .btn clips its children for the shine, and
+   a ring drawn inside would be clipped with them */
+.hero-cta .btn { animation: cta-pulse 3.6s ease-out infinite; }
+.hero-cta .btn:hover { animation-play-state: paused; }
+@keyframes cta-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(111,195,232,.45),
+                0 0 0 1px rgba(47,137,197,.4), 0 8px 30px rgba(47,137,197,.35);
+  }
+  70%, 100% {
+    box-shadow: 0 0 0 20px rgba(111,195,232,0),
+                0 0 0 1px rgba(47,137,197,.4), 0 8px 30px rgba(47,137,197,.35);
+  }
+}
 
 /* ---- scroll velocity ----
    The page leans into a flick and settles when it stops. Small numbers on
