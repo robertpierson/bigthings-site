@@ -195,6 +195,7 @@
 
     var lastY = scrollY, vel = 0;
     var toTop = document.querySelector('.to-top');
+    var marquee = document.querySelector('.marquee');
 
     var measure = function () {
       ticking = false;
@@ -212,6 +213,7 @@
       vel += (Math.max(-1, Math.min(1, raw)) - vel) * 0.25;
       if (Math.abs(vel) < 0.001) vel = 0;
       root.style.setProperty('--v', vel.toFixed(4));
+      if (marquee) marquee.classList.toggle('up', raw < -0.02);  // the ticker runs with you
       if (vel !== 0) schedule();   // keep easing after the scroll stops
       for (var i = 0; i < tracked.length; i++) {
         var el = tracked[i], b = el.getBoundingClientRect();
@@ -353,9 +355,11 @@
 
     ctx.clearRect(0, 0, w, h);
 
+    var rush = 1 + Math.abs(vel || 0) * 4;   // the field streams when the page moves
+
     for (var i = 0; i < nodes.length; i++) {
       var p = nodes[i];
-      p.x += p.vx; p.y += p.vy;
+      p.x += p.vx * rush; p.y += p.vy * rush;
       if (p.x < -20) p.x = w + 20; else if (p.x > w + 20) p.x = -20;
       if (p.y < -20) p.y = h + 20; else if (p.y > h + 20) p.y = -20;
 
